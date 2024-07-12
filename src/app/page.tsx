@@ -32,7 +32,6 @@ const resetOption: Partial<Options> = {
     margin: 20,
   },
 };
-const qrCode = new QRCodeStyling(resetOption);
 
 export default function Home() {
   const [fileExt, setFileExt] = useState<FileExtension>("png");
@@ -40,6 +39,7 @@ export default function Home() {
   const [image, setImage] = useState<string>(
     "https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg",
   );
+  const [qrCode] = useState(new QRCodeStyling(resetOption));
 
   useEffect(() => {
     const qrCodeElement = document.querySelector("#qr-code");
@@ -56,8 +56,6 @@ export default function Home() {
   };
 
   const onSizeChange = (event: ChangeEvent<HTMLInputElement>) => {
-    console.log(event);
-
     const size = Number(event.target.value);
     if (!(size > 0)) return;
 
@@ -101,7 +99,6 @@ export default function Home() {
     let url = "";
     reader.onloadend = function() {
       url = reader.result as string;
-      console.log("onloadend", url);
       setImage(url);
       setOptions({
         image: url,
