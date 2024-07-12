@@ -1,113 +1,240 @@
-import Image from "next/image";
+"use client";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import QRCodeStyling, { FileExtension, Options } from "qr-code-styling";
+import React, { ChangeEvent, useEffect, useState } from "react";
+
+const resetOption: Partial<Options> = {
+  data: "https://qr.castellon.dev",
+  width: 500,
+  height: 500,
+  image:
+    "https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg",
+  dotsOptions: {
+    color: "#4267b2",
+    type: "rounded",
+  },
+  imageOptions: {
+    crossOrigin: "anonymous",
+    margin: 20,
+  },
+};
+const qrCode = new QRCodeStyling(resetOption);
 
 export default function Home() {
+  const [fileExt, setFileExt] = useState<FileExtension>("png");
+  const [options, setOptions] = useState<Partial<Options>>(resetOption);
+  const [image, setImage] = useState<string>(
+    "https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg",
+  );
+
+  useEffect(() => {
+    const qrCodeElement = document.querySelector("#qr-code");
+    qrCode.append(qrCodeElement as HTMLElement);
+  }, []);
+
+  useEffect(() => {
+    qrCode.update(options);
+  }, [options]);
+
+  const onUrlChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const url = event.target.value;
+    setOptions({ data: url });
+  };
+
+  const onSizeChange = (event: ChangeEvent<HTMLInputElement>) => {
+    console.log(event);
+
+    const size = Number(event.target.value);
+    if (!(size > 0)) return;
+
+    setOptions({
+      width: size,
+      height: size,
+    });
+  };
+  const onColorChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const color = event.target.value;
+    setOptions({
+      dotsOptions: {
+        color: color,
+      },
+    });
+  };
+
+  const onExtensionChange = (value: string) => {
+    setFileExt(value as FileExtension);
+  };
+
+  const onDownloadClick = () => {
+    qrCode.download({
+      extension: fileExt,
+    });
+  };
+  const handleImageToggle = (checked: boolean) => {
+    if (checked) {
+      setOptions({
+        image: image,
+      });
+      return;
+    }
+
+    setOptions({
+      image: "",
+    });
+  };
+  function encodeImageFileAsURL(file: Blob) {
+    const reader = new FileReader();
+    let url = "";
+    reader.onloadend = function() {
+      url = reader.result as string;
+      console.log("onloadend", url);
+      setImage(url);
+      setOptions({
+        image: url,
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  const onImageUploadChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const imageFiles = event.target.files;
+    if (!imageFiles) return;
+
+    encodeImageFileAsURL(imageFiles[0]);
+  };
+  const onImageSizeChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const imageSize = Number(event.target.value);
+    setOptions({
+      imageOptions: {
+        imageSize,
+      },
+    });
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <div className="flex flex-col justify-center max-w-xl mx-auto">
+      <div className="flex justify-between">
+        <h1 className="text-5xl mb-4">QR Generator</h1>
+        <ThemeToggle />
+      </div>
+      <div className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-xl">Url</h2>
+          <Input id="url-input" value={options.data} onChange={onUrlChange} />
         </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-2">
+            <h2>Style Options</h2>
+            <div className="flex gap-2 items-center">
+              <Label htmlFor="color-input">Color</Label>
+              <Input
+                id="color-input"
+                value={options.dotsOptions?.color}
+                onChange={onColorChange}
+              />
+            </div>
+            <div className="flex gap-2 items-center">
+              <Label htmlFor="include-logo">With Logo</Label>
+              <Switch
+                id="include-logo"
+                checked={options.image !== ""}
+                onCheckedChange={handleImageToggle}
+              />
+            </div>
+            {options.image !== "" && (
+              <>
+                <div className="flex gap-2 items-center">
+                  <Label htmlFor="picture">Logo Image</Label>
+                  <Input
+                    id="picture"
+                    type="file"
+                    onChange={onImageUploadChange}
+                  />
+                </div>
+                <div className="flex gap-2 items-center">
+                  <Label htmlFor="picture-size">Logo Size</Label>
+                  <Input
+                    id="picture-size"
+                    value={options.imageOptions?.imageSize ?? 0.4}
+                    onChange={onImageSizeChange}
+                  />
+                </div>
+                <Slider
+                  defaultValue={[0.4]}
+                  min={0.1}
+                  max={1}
+                  step={0.05}
+                  onValueChange={(value) =>
+                    onImageSizeChange({
+                      target: { value: value[0].toString() },
+                    } as ChangeEvent<HTMLInputElement>)
+                  }
+                />
+              </>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <h2>Download Options</h2>
+
+            <div className="flex gap-2 items-center">
+              <Label htmlFor="size-input">Size</Label>
+              <Input
+                id="size-input"
+                value={options.width}
+                onChange={onSizeChange}
+              />
+            </div>
+            <Slider
+              defaultValue={[500]}
+              min={200}
+              max={500}
+              step={1}
+              onValueChange={(value) =>
+                onSizeChange({
+                  target: { value: value[0].toString() },
+                } as ChangeEvent<HTMLInputElement>)
+              }
+            />
+            <div className="flex gap-2 items-center">
+              <Label>File Type</Label>
+              <Select defaultValue={fileExt} onValueChange={onExtensionChange}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select image type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Image Extension</SelectLabel>
+                    <SelectItem value="png">PNG</SelectItem>
+                    <SelectItem value="jpeg">JPEG</SelectItem>
+                    <SelectItem value="webp">WEBP</SelectItem>
+                    <SelectItem value="svg">SVG</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+        <Button onClick={onDownloadClick}>Download</Button>
       </div>
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
+      <div className="flex justify-center my-12">
+        <div id="qr-code"></div>
       </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    </div>
   );
 }
