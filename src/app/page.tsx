@@ -39,14 +39,23 @@ export default function Home() {
   const [image, setImage] = useState<string>(
     "https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg",
   );
-  const [qrCode] = useState(new QRCodeStyling(resetOption));
+  const [qrCode, setQrCode] = useState<QRCodeStyling>();
 
   useEffect(() => {
-    const qrCodeElement = document.querySelector("#qr-code");
-    qrCode.append(qrCodeElement as HTMLElement);
+    const initQrCode = async () => {
+      const QRCodeStyling = await import("qr-code-styling");
+      const qr =new QRCodeStyling.default(resetOption)
+
+      const qrCodeElement = document.querySelector("#qr-code");
+      qr.append(qrCodeElement as HTMLElement);
+
+      setQrCode(qr);
+    };
+    initQrCode();
   }, []);
 
   useEffect(() => {
+    if (!qrCode) return;
     qrCode.update(options);
   }, [options]);
 
@@ -78,6 +87,7 @@ export default function Home() {
   };
 
   const onDownloadClick = () => {
+    if (!qrCode) return;
     qrCode.download({
       extension: fileExt,
     });
