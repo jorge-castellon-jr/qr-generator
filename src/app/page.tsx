@@ -1,4 +1,5 @@
 "use client";
+import { ColorPicker } from "@/components/color-picker";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,12 +20,11 @@ import React, { ChangeEvent, useEffect, useState } from "react";
 
 const resetOption: Partial<Options> = {
   data: "https://qr.castellon.dev",
-  width: 500,
-  height: 500,
-  image:
-    "https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg",
+  width: 300,
+  height: 300,
+  image: "",
   dotsOptions: {
-    color: "#4267b2",
+    color: "#09203f",
     type: "rounded",
   },
   imageOptions: {
@@ -34,6 +34,7 @@ const resetOption: Partial<Options> = {
 };
 
 export default function Home() {
+  const [advance, setAdvance] = useState<boolean>(false);
   const [fileExt, setFileExt] = useState<FileExtension>("png");
   const [options, setOptions] = useState<Partial<Options>>(resetOption);
   const [image, setImage] = useState<string>(
@@ -44,7 +45,7 @@ export default function Home() {
   useEffect(() => {
     const initQrCode = async () => {
       const QRCodeStyling = await import("qr-code-styling");
-      const qr =new QRCodeStyling.default(resetOption)
+      const qr = new QRCodeStyling.default(resetOption);
 
       const qrCodeElement = document.querySelector("#qr-code");
       qr.append(qrCodeElement as HTMLElement);
@@ -143,99 +144,113 @@ export default function Home() {
           <h2 className="text-xl">Url</h2>
           <Input id="url-input" value={options.data} onChange={onUrlChange} />
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            <h2>Style Options</h2>
-            <div className="flex gap-2 items-center">
-              <Label htmlFor="color-input">Color</Label>
-              <Input
-                id="color-input"
-                value={options.dotsOptions?.color}
-                onChange={onColorChange}
-              />
-            </div>
-            <div className="flex gap-2 items-center">
-              <Label htmlFor="include-logo">With Logo</Label>
-              <Switch
-                id="include-logo"
-                checked={options.image !== ""}
-                onCheckedChange={handleImageToggle}
-              />
-            </div>
-            {options.image !== "" && (
-              <>
-                <div className="flex gap-2 items-center">
-                  <Label htmlFor="picture">Logo Image</Label>
-                  <Input
-                    id="picture"
-                    type="file"
-                    onChange={onImageUploadChange}
-                  />
-                </div>
-                <div className="flex gap-2 items-center">
-                  <Label htmlFor="picture-size">Logo Size</Label>
-                  <Input
-                    id="picture-size"
-                    value={options.imageOptions?.imageSize ?? 0.4}
-                    onChange={onImageSizeChange}
-                  />
-                </div>
-                <Slider
-                  defaultValue={[0.4]}
-                  min={0.1}
-                  max={1}
-                  step={0.05}
-                  onValueChange={(value) =>
-                    onImageSizeChange({
-                      target: { value: value[0].toString() },
+        <div className="flex justify-end">
+          <Button variant="link" onClick={() => setAdvance((old) => !old)}>
+            Advanced Options
+          </Button>
+        </div>
+        {advance && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <h2>Style Options</h2>
+              <div className="flex gap-2 items-center">
+                <Label htmlFor="color-input">Color</Label>
+                <ColorPicker
+                  background={options.dotsOptions?.color ?? ""}
+                  setBackground={(value) =>
+                    onColorChange({
+                      target: { value: value },
                     } as ChangeEvent<HTMLInputElement>)
                   }
                 />
-              </>
-            )}
-          </div>
+              </div>
+              <div className="flex gap-2 items-center">
+                <Label htmlFor="include-logo">With Logo</Label>
+                <Switch
+                  id="include-logo"
+                  checked={options.image !== ""}
+                  onCheckedChange={handleImageToggle}
+                />
+              </div>
+              {options.image !== "" && (
+                <>
+                  <div className="flex gap-2 items-center">
+                    <Label htmlFor="picture">Logo Image</Label>
+                    <Input
+                      id="picture"
+                      type="file"
+                      onChange={onImageUploadChange}
+                    />
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <Label htmlFor="picture-size">Logo Size</Label>
+                    <Input
+                      id="picture-size"
+                      value={options.imageOptions?.imageSize ?? 0.4}
+                      onChange={onImageSizeChange}
+                    />
+                  </div>
+                  <Slider
+                    defaultValue={[0.4]}
+                    min={0.1}
+                    max={1}
+                    step={0.05}
+                    onValueChange={(value) =>
+                      onImageSizeChange({
+                        target: { value: value[0].toString() },
+                      } as ChangeEvent<HTMLInputElement>)
+                    }
+                  />
+                </>
+              )}
+            </div>
 
-          <div className="flex flex-col gap-2">
-            <h2>Download Options</h2>
+            <div className="flex flex-col gap-2">
+              <h2>Download Options</h2>
 
-            <div className="flex gap-2 items-center">
-              <Label htmlFor="size-input">Size</Label>
-              <Input
-                id="size-input"
-                value={options.width}
-                onChange={onSizeChange}
+              <div className="flex gap-2 items-center">
+                <Label htmlFor="size-input">Size</Label>
+                <Input
+                  id="size-input"
+                  value={options.width}
+                  onChange={onSizeChange}
+                />
+              </div>
+              <Slider
+                defaultValue={[500]}
+                min={200}
+                max={500}
+                step={1}
+                onValueChange={(value) =>
+                  onSizeChange({
+                    target: { value: value[0].toString() },
+                  } as ChangeEvent<HTMLInputElement>)
+                }
               />
-            </div>
-            <Slider
-              defaultValue={[500]}
-              min={200}
-              max={500}
-              step={1}
-              onValueChange={(value) =>
-                onSizeChange({
-                  target: { value: value[0].toString() },
-                } as ChangeEvent<HTMLInputElement>)
-              }
-            />
-            <div className="flex gap-2 items-center">
-              <Label>File Type</Label>
-              <Select defaultValue={fileExt} onValueChange={onExtensionChange}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select image type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Image Extension</SelectLabel>
-                    <SelectItem value="png">PNG</SelectItem>
-                    <SelectItem value="jpeg">JPEG</SelectItem>
-                    <SelectItem value="webp">WEBP</SelectItem>
-                    <SelectItem value="svg">SVG</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2 items-center">
+                <Label>File Type</Label>
+                <Select
+                  defaultValue={fileExt}
+                  onValueChange={onExtensionChange}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select image type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Image Extension</SelectLabel>
+                      <SelectItem value="png">PNG</SelectItem>
+                      <SelectItem value="jpeg">JPEG</SelectItem>
+                      <SelectItem value="webp">WEBP</SelectItem>
+                      <SelectItem value="svg">SVG</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+
         <Button onClick={onDownloadClick}>Download</Button>
       </div>
 
