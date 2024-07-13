@@ -62,25 +62,31 @@ export default function Home() {
 
   const onUrlChange = (event: ChangeEvent<HTMLInputElement>) => {
     const url = event.target.value;
-    setOptions({ data: url });
+    setOptions((old) => ({
+      ...old,
+      data: url,
+    }));
   };
 
   const onSizeChange = (event: ChangeEvent<HTMLInputElement>) => {
     const size = Number(event.target.value);
     if (!(size > 0)) return;
 
-    setOptions({
+    setOptions((old) => ({
+      ...old,
       width: size,
       height: size,
-    });
+    }));
   };
   const onColorChange = (event: ChangeEvent<HTMLInputElement>) => {
     const color = event.target.value;
-    setOptions({
+    setOptions((old) => ({
+      ...old,
       dotsOptions: {
+        ...old.dotsOptions,
         color: color,
       },
-    });
+    }));
   };
 
   const onExtensionChange = (value: string) => {
@@ -93,17 +99,20 @@ export default function Home() {
       extension: fileExt,
     });
   };
+
   const handleImageToggle = (checked: boolean) => {
     if (checked) {
-      setOptions({
+      setOptions((old) => ({
+        ...old,
         image: image,
-      });
+      }));
       return;
     }
 
-    setOptions({
+    setOptions((old) => ({
+      ...old,
       image: "",
-    });
+    }));
   };
   function encodeImageFileAsURL(file: Blob) {
     const reader = new FileReader();
@@ -111,9 +120,10 @@ export default function Home() {
     reader.onloadend = function() {
       url = reader.result as string;
       setImage(url);
-      setOptions({
+      setOptions((old) => ({
+        ...old,
         image: url,
-      });
+      }));
     };
     reader.readAsDataURL(file);
   }
@@ -126,11 +136,13 @@ export default function Home() {
   };
   const onImageSizeChange = (event: ChangeEvent<HTMLInputElement>) => {
     const imageSize = Number(event.target.value);
-    setOptions({
+    setOptions((old) => ({
+      ...old,
       imageOptions: {
+        ...old.imageOptions,
         imageSize,
       },
-    });
+    }));
   };
 
   return (
@@ -217,7 +229,7 @@ export default function Home() {
                 />
               </div>
               <Slider
-                defaultValue={[500]}
+                defaultValue={[resetOption.width as number]}
                 min={200}
                 max={500}
                 step={1}
